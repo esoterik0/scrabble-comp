@@ -4,7 +4,9 @@ Scrabble word list filtering based on list comprehensions
 # Word List Filter (Wolf)
 
 Each filter method will return a new wolf so that calls can be chained together.
+
     ex. wolf(words).len(2).prefix('a').words
+
         wolf().smaller(3).words
 
 Each filter will keep track of a descripton of the operations performed on the list.
