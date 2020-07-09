@@ -1,9 +1,14 @@
 # scrabble words list
 import urllib.request as inet
+import string
 
 # the site owners ask that you download and cache the file, and not hammer their servers
 twl_url = 'https://www.wordgamedictionary.com/twl06/download/twl06.txt'
 fname = 'twl06.txt'
+
+letters = string.ascii_lowercase
+vowels = 'aoeui'
+notvowels = ''.join(c for c in letters if c not in vowels)
 
 
 def prepOutput(words, end='\n'):

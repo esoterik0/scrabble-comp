@@ -4,10 +4,19 @@ from .twl import fname
 from .twl import savetext
 from .twl import dowloadWordlist
 from .twl import openlist
+from .twl import vowels
+from .twl import letters
+
+from functools import reduce
+from operator import add
 
 
 def wolf_from_file(file, desc="fromFile"):
     return Wolf(openlist(file), desc)
+
+
+def _total(st, chars):
+    return reduce(add, (st.count(c) for c in chars))
 
 
 class Wolf:
@@ -23,36 +32,41 @@ class Wolf:
     somewhat like set notation.
 
     Filters:
-        .len        filters by length
-        .lenst      filters by lengths set by a list
-        .smaller    filters by length <=
-        .bigger     filters by length >=
-        .prefix     filters by prefix
-        .starts         " "
-        .postfix    filters by postfix
-        .ends           " "
-        .contains   filters for words with the whole string
-        .hasltrs    filters for words with all of the letters in ltrs
-        .notltrs    filters for words with none of the letters in ltrs
-        .foo        filters for words that return true for foo(word); catch all for fancier stuff
-
+        .len                    filters by length
+        .lenlst                 filters by lengths set by a list
+        .smaller                filters by length <=
+        .bigger                 filters by length >=
+        .prefix                 filters by prefix
+        .starts                     " "
+        .postfix                filters by postfix
+        .ends                       " "
+        .contains               filters for words with the whole string
+        .hasltrs                filters for words with all of the letters in ltrs
+        .notltrs                filters for words with none of the letters in ltrs
+        .foo                    filters for words that return true for foo(word); catch all for fancier stuff
+        .vowel_count            filters for words with exactly num vowels
+        .vowel_countlst         filters for words with any [num, ...] vowels
+        .vowel_count_bigger     filters for words with vowels >= num
+        .vowel_count_smaller    filters for words with vowels <= num
     Set operations:
         .union
         .difference
         .intersection
 
     Utilities:
-        .empty      returns an empty wolf
-        .save       saves list to file
-        .getDesc    gets a description of list
-    """
+        .empty                  returns an empty wolf
+        .save                   saves list to file
+        .getDesc                gets a description of list
+        .save_by_letter         spilits the list into lists starting with a letter, and saves each file
+        .save_by_last_letter    spilits the list into lists ending with a letter, and saves each file
+        """
     def __init__(self, words=None, desc="w|"):
         """
         Wolf():
             Checks if the fname exists and load the file if it exists
             If it doesn't exist, download and save the file from twl.TWL_URL
         """
-        if not words:
+        if words is None:  # empty list [] is not none
             if not exists(fname):
                 dowloadWordlist()
 
@@ -77,7 +91,7 @@ class Wolf:
             self._descat('len==', length)
         )
 
-    def lenst(self, length):
+    def lenlst(self, length):
         "filters by lengths set by a list"
         return Wolf(
             [w for w in self.words if len(w) in length],
@@ -131,6 +145,34 @@ class Wolf:
         return Wolf(
             [w for w in self.words if all(lt not in w for lt in ltrs.lower())],
             self._descat('has_none', ltrs)
+        )
+
+    def vowel_count(self, num):
+        "filters for words with exactly num vowels"
+        return Wolf(
+            [w for w in self.words if _total(w, vowels) == num],
+            self._descat('vowel=', num)
+        )
+
+    def vowel_countlst(self, nums):
+        "filters for words with any [num, ...] vowels"
+        return Wolf(
+            [w for w in self.words if _total(w, vowels) in nums],
+            self._descat('vowel=', nums)
+        )
+
+    def vowel_count_bigger(self, num):
+        "filters for words with vowels >= num"
+        return Wolf(
+            [w for w in self.words if _total(w, vowels) >= num],
+            self._descat('vowel>=', num)
+        )
+
+    def vowel_count_smaller(self, num):
+        "filters for words with vowels <= num"
+        return Wolf(
+            [w for w in self.words if _total(w, vowels) <= num],
+            self._descat('vowel<=', num)
         )
 
     def foo(self, foo, dec='desc', pro='func:'):
@@ -191,6 +233,16 @@ class Wolf:
         savetext(self.words, sfname)
 
         return self
+
+    def save_by_letter(self, basename, fmt='{}_{}.txt'):
+        "spilits the list into lists starting with a letter, and saves each file"
+        for wolf, name in [(self.starts(c), fmt.format(basename, c)) for c in letters]:
+            wolf.save(name)
+
+    def save_by_last_letter(self, basename, fmt='{}_-{}.txt'):
+        "spilits the list into lists ending with a letter, and saves each file"
+        for wolf, name in [(self.ends(c), fmt.format(basename, c)) for c in letters]:
+            wolf.save(name)
 
 ######################################################################################
 # private helpers
