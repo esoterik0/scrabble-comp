@@ -1,3 +1,4 @@
+# writes various .txt lists to disk
 import twl
 import os
 
