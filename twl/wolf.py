@@ -48,6 +48,7 @@ class Wolf:
         .vowel_countlst         filters for words with any [num, ...] vowels
         .vowel_count_bigger     filters for words with vowels >= num
         .vowel_count_smaller    filters for words with vowels <= num
+
     Set operations:
         .union
         .difference
@@ -132,7 +133,7 @@ class Wolf:
     def contains(self, st):
         "filters for words with the whole string"
         return Wolf(
-            [w for w in self.words if w in st.lower()],
+            [w for w in self.words if st.lower() in w],
             self._descat('has_str:', st)
         )
 

@@ -8,7 +8,9 @@ fname = 'twl06.txt'
 
 letters = string.ascii_lowercase
 vowels = 'aoeui'
+digraphs = [a+b for a in letters for b in letters]
 notvowels = ''.join(c for c in letters if c not in vowels)
+
 
 
 def prepOutput(words, end='\n'):
