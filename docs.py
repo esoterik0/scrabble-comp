@@ -1,6 +1,6 @@
-import twl
 from docx import Document
-from docx.enum.section import WD_SECTION
+
+import twl
 
 # didn't work as expected.
 # def _set_columns(section, cols):
@@ -18,6 +18,7 @@ from docx.enum.section import WD_SECTION
 
 
 def fix_filename(fname, postfix='.docx'):
+    "returns fname with postfix appended if needed"
     if fname.lower().endswith(postfix):
         return fname
 
@@ -25,6 +26,7 @@ def fix_filename(fname, postfix='.docx'):
 
 
 def doc_by_letter_contains(wolf, cols, fname):
+    "creates a document organized by letter, and each word is followed by how many words contain it."
     doc = Document()
     full = twl.Wolf()
 
@@ -49,6 +51,7 @@ def doc_by_letter_contains(wolf, cols, fname):
 
 
 def doc_by_letter(wolf, cols, fname):
+    "creates a document organized by letter"
     doc = Document()
 
     for c in twl.letters:
@@ -68,12 +71,14 @@ wolf = twl.Wolf()
 
 
 def byNumber(byletter=doc_by_letter, start=2, end=9):
+    "creates end-start+1 documents listing the letters of a length, formatted by letter"
     for n in range(start, end+1):
         print("preparing", n, "letters long")
         byletter(wolf.len(n), 9, "{}ltr".format(n))
 
 
 def digraphs():
+    "creates a document of digraphs and their count of words contaning the digraph"
     doc = Document()
 
     pack = [(pair, wolf.contains(pair)) for pair in twl.digraphs]
