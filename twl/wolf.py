@@ -1,6 +1,7 @@
 # Wordlist filter
 from os.path import exists
 from .twl import fname
+from .twl import ftwl
 from .twl import savetext
 from .twl import dowloadWordlist
 from .twl import openlist
@@ -12,11 +13,51 @@ from operator import add
 
 
 def wolf_from_file(file, desc="fromFile"):
+    "returns a new wolf from a file, with optional desc"
     return Wolf(openlist(file), desc)
 
 
 def _total(st, chars):
+    "returns the total occurances of each character in chars"
     return reduce(add, (st.count(c) for c in chars))
+
+
+def _reduceletters(lttrs):
+    """
+    Takes: 'studios'
+    Returns: {'s':2, 't':1, 'u':1, 'd':1, 'i':1, 'o':1}
+    """
+    key = {}
+
+    for t in lttrs:
+        key.setdefault(t, 0)
+        key[t] += 1
+
+    return key
+
+
+def _checklttrs(lttrs):
+    "returns a lambda(word) that returns true if the word contains all the letters in lttrs"
+    key = _reduceletters(lttrs)
+    return lambda word: all(n == _total(word, t) for t, n in key.items())
+
+
+def _checkinside(lttrs):
+    "returns a lambda(word) that returns true if the word can be spelled with the letters in lttrs"
+    key = _reduceletters(lttrs)
+    return lambda word: all(key.get(t, 0) >= _total(word, t) for t in word)
+
+
+def _checkwild(lttrs, wild=1):
+    "retruns a function(word) that returns true if the word can be spelled with the letters in lttrs and wild blanks"
+    key = _reduceletters(lttrs)
+
+    def foo(word):
+        wrd = _reduceletters(word)
+        cnts = [max(wrd.get(t, 0)-key.get(t, 0), 0) for t in wrd.keys()]
+        return sum(cnts, -wild) == 0
+
+    return foo
 
 
 class Wolf:
@@ -42,7 +83,13 @@ class Wolf:
         .ends                       " "
         .contains               filters for words with the whole string
         .hasltrs                filters for words with all of the letters in ltrs
+        .has_all                    " "
         .notltrs                filters for words with none of the letters in ltrs
+        .has_none                   " "
+        .inside                 filters for words composed of letters in lttrs
+        .spell                      " "
+        .wild                   filters for words composed of letters in lttrs + wild
+        .spellwild                  " "
         .foo                    filters for words that return true for foo(word); catch all for fancier stuff
         .vowel_count            filters for words with exactly num vowels
         .vowel_countlst         filters for words with any [num, ...] vowels
@@ -68,13 +115,22 @@ class Wolf:
             If it doesn't exist, download and save the file from twl.TWL_URL
         """
         if words is None:  # empty list [] is not none
-            if not exists(fname):
-                dowloadWordlist()
+            if exists(fname):
+                words = openlist(fname)
+                print('opened ', fname)
+            else:
+                if not exists(ftwl):
+                    dowloadWordlist()
 
-            words = openlist(fname)
+                words = openlist(ftwl)
+                print('opened ', ftwl)
 
         self.words = words
         self._desc = desc
+
+    def __call__(self):
+        "the call operator returns words"
+        return self.words
 
     def __str__(self):
         "Gives a text description of the filters applied and size of resulting set"
@@ -137,13 +193,6 @@ class Wolf:
             self._descat('has_str:', st)
         )
 
-    def hasltrs(self, ltrs):
-        "filters for words with all of the letters in ltrs"
-        return Wolf(
-            [w for w in self.words if all(lt in w for lt in ltrs.lower())],
-            self._descat('has_all', ltrs)
-        )
-
     def notltrs(self, ltrs):
         "filters for words with none of the letters in ltrs"
         return Wolf(
@@ -186,9 +235,26 @@ class Wolf:
             self._descat(pro, dec)
         )
 
+    def hasltrs(self, ltrs):
+        "filters for words with all of the letters in ltrs"
+        return self.foo(_checklttrs(ltrs.lower()), ltrs, 'has_all:')
+
+    def inside(self, lttrs):
+        "filters for words composed of letters in lttrs"
+        return self.foo(_checkinside(lttrs.lower()), lttrs, 'inside:')
+
+    def wild(self, lttrs, wild=1):
+        "filters for words composed of letters in lttrs + wild"
+        return self.foo(_checkwild(lttrs.lower(), wild), lttrs, 'inside+{}:'.format(wild))
+
     # alternate names for these functions
+
+    has_all = hasltrs
+    has_none = notltrs
     starts = prefix
     ends = postfix
+    spell = inside
+    spellwild = wild
 
 ######################################################################################
 # set operations
@@ -200,7 +266,7 @@ class Wolf:
 
         return Wolf(
             list(swords),
-            '(({{{}}}) U ({{{}}}))'.format(self._desc, wolf.desc)
+            '({{{}}} U {{{}}})'.format(self._desc, wolf.desc)
         )
 
     def difference(self, wolf):
@@ -210,7 +276,7 @@ class Wolf:
 
         return Wolf(
             list(swords),
-            '(({}) - ({}))'.format(self._desc, wolf.desc)
+            '({{{}}} - {{{}}})'.format(self._desc, wolf.desc)
         )
 
     def intersection(self, wolf):
@@ -220,7 +286,7 @@ class Wolf:
 
         return Wolf(
             list(swords),
-            '(({}) ^ ({}))'.format(self._desc, wolf.desc)
+            '({{{}}} ^ {{{}}})'.format(self._desc, wolf.desc)
         )
 
 ######################################################################################

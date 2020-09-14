@@ -4,13 +4,13 @@ import string
 
 # the site owners ask that you download and cache the file, and not hammer their servers
 twl_url = 'https://www.wordgamedictionary.com/twl06/download/twl06.txt'
-fname = 'twl06.txt'
+ftwl = 'twl06.txt'
+fname = 'nwl18.txt'
 
 letters = string.ascii_lowercase
 vowels = 'aoeui'
 digraphs = [a+b for a in letters for b in letters]
 notvowels = ''.join(c for c in letters if c not in vowels)
-
 
 
 def prepOutput(words, end='\n'):
@@ -38,7 +38,8 @@ def wgetwordlist(url=twl_url):
     return cleanInput([r.decode('utf-8').strip() for r in wordfile])
 
 
-def dowloadWordlist(url=twl_url, name=fname):
+def dowloadWordlist(url=twl_url, name=ftwl):
+    print('downloading', ftwl, 'from', twl_url, sep=' ')
     savetext(wgetwordlist(url), name)
 
 
