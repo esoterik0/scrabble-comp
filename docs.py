@@ -58,7 +58,9 @@ def doc_by_letter(wolf, cols, fname):
         pup = wolf.starts(c)
         if len(pup) == 0:
             continue
-        doc.add_paragraph(twl.prep_words(pup.words))
+        # doc.add_paragraph(twl.prep_words(pup.words))
+        doc.add_paragraph('\n'.join(pup.words)+'\n')
+        # doc.add_section()
         doc.add_paragraph('\n')
 
     if not fname:
@@ -95,5 +97,5 @@ def digraphs():
 if __name__ == "__main__":
     # byNumber()
     # digraphs()
-    byNumber(doc_by_letter_contains, end=4)
+    # byNumber(doc_by_letter_contains, end=4)
     byNumber(start=5)

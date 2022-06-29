@@ -30,4 +30,5 @@ def contains(fix, ltrs, wild=0):
 if __name__ == "__main__":
     # print(wolf.len(2).words)
     # print(wolf.wild('aa')())
-    print(contains('a', 'ciodtji'))
+    print(wd:=wolf.starts('gi').words)
+    print(len(wd))
